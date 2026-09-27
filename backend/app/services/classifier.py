@@ -7,7 +7,7 @@ Image -> (condition, confidence).
    or fails, falls back to Gemini vision.
 3. If everything fails, returns "unknown" so the safety layer escalates.
 
-Nothing outside this file needs to change — routes.py only calls classify().
+Nothing outside this file needs to change - routes.py only calls classify().
 """
 import io
 import logging
@@ -33,7 +33,7 @@ def _load_model():
             log.info("Loaded trained classifier from %s", config.CLASSIFIER_MODEL_PATH)
         except Exception as e:
             _model_failed = True
-            log.warning("Could not load trained classifier (%s) — using Gemini only.", e)
+            log.warning("Could not load trained classifier (%s) - using Gemini only.", e)
     return _model
 
 
@@ -50,4 +50,35 @@ def _classify_with_model(image_bytes: bytes):
     return label, confidence
 
 
-def _classify_with_gemini(image_bytes: bytes,
+def _classify_with_gemini(image_bytes: bytes, media_type: str) -> tuple[str, float]:
+    """Fallback: Gemini vision (returns confidence 0-100, we convert to 0-1)."""
+    result = gemini.classify_image(image_bytes, media_type)
+    label = result.get("label", "unknown")
+    if label not in config.ALLOWED_CONDITIONS:
+        label = "unknown"
+    confidence = float(result.get("confidence", 0)) / 100.0
+    return label, confidence
+
+
+def classify(image_bytes: bytes, media_type: str) -> tuple[str, float]:
+    # 1) Trained model first
+    model_result = None
+    try:
+        model_result = _classify_with_model(image_bytes)
+    except Exception as e:
+        log.warning("Trained classifier failed on this image (%s).", e)
+
+    if model_result and model_result[1] >= config.CLASSIFIER_CONF_THRESHOLD:
+        log.info("classify source=model label=%s conf=%.2f", *model_result)
+        return model_result
+
+    # 2) Not confident / unavailable -> Gemini fallback
+    try:
+        label, confidence = _classify_with_gemini(image_bytes, media_type)
+        log.info("classify source=gemini label=%s conf=%.2f", label, confidence)
+        return label, confidence
+    except Exception as e:
+        log.warning("Gemini fallback failed (%s).", e)
+
+    # 3) Everything failed -> unknown, so the safety layer escalates
+    return "unknown", 0.0
