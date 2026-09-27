@@ -23,4 +23,7 @@ KNOWLEDGE_DIR = BASE_DIR / "knowledge"
 VECTOR_STORE_DIR = BASE_DIR / "vector_store"
 PROMPT_PATH = BASE_DIR / "app" / "prompts" / "first_aid_prompt.txt"
 
-ALLOWED_CONDITIONS
+ALLOWED_CONDITIONS = ["burn", "cut", "bleeding", "choking", "bruise", "abrasion",
+                      "chronic_wound", "normal", "unknown"]
+
+# --- Trained wound classifier (YOLO11s-cls, fine-tuned on NVIDIA
