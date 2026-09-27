@@ -12,9 +12,13 @@ AUDIO_EXTENSIONS = {"wav", "flac", "ogg"}  # Riva's offline_recognize expects on
 
 
 @router.get("/")
-def health():
+def root():
     return {"status": "ok"}
 
+
+@router.get("/health")
+def health():
+    return {"status": "ok"}
 
 @router.post("/analyze", response_model=FirstAidResponse)
 async def analyze(image: UploadFile = File(...)):
