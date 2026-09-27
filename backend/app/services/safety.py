@@ -1,12 +1,12 @@
 """
-Final safety layer — plain-code rules that always run, no AI involved,
+Final safety layer - plain-code rules that always run, no AI involved,
 so they are fast, predictable and cannot be "talked out of" by a model.
 
 1. Force the emergency banner for dangerous or unsure cases.
 2. Chronic wounds -> "see a doctor soon" (no emergency banner by itself).
 3. Block medicine / dose advice in the steps (but allow "Do not ..." warnings).
 4. Never return empty guidance.
-5. Never turn the emergency banner OFF — only ON.
+5. Never turn the emergency banner OFF - only ON.
 
 An NVIDIA content-safety model can be added later (see ENABLE_NVIDIA_SAFETY_MODEL).
 """
@@ -32,8 +32,8 @@ MEDICINE_PATTERN = re.compile(
 )
 NEGATIVE_PREFIXES = ("do not", "don't", "dont", "never", "avoid")
 
-EMERGENCY_STEP = "Call emergency services now — in Algeria: 14 (Civil Protection) or 115 (SAMU)."
-SEE_DOCTOR_STEP = "Have this wound checked by a doctor or nurse soon — it may need professional treatment."
+EMERGENCY_STEP = "Call emergency services now - in Algeria: 14 (Civil Protection) or 115 (SAMU)."
+SEE_DOCTOR_STEP = "Have this wound checked by a doctor or nurse soon - it may need professional treatment."
 SAFE_FALLBACK_STEPS = [
     "Stay calm and keep the person safe and still.",
     "If there is bleeding, press firmly on the wound with a clean cloth.",
@@ -96,4 +96,10 @@ def validate(response: FirstAidResponse) -> FirstAidResponse:
     if escalate or r.seek_emergency_help:
         r.seek_emergency_help = True
         if not any("emergency" in step.lower() for step in r.steps):
-            r.steps.insert(0,
+            r.steps.insert(0, EMERGENCY_STEP)
+
+    if reasons:
+        log.info("safety escalation: %s", ", ".join(reasons))
+
+    # Optional future work: NVIDIA content-safety model check here.
+    return r
