@@ -1,0 +1,19 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+python-dotenv==1.0.1
+pydantic==2.9.2
+openai==1.51.0
+httpx==0.27.2
+numpy==1.26.4
+faiss-cpu==1.8.0
+nvidia-riva-client==2.16.0
+
+# Local image classifier (models/classifier.pt was trained with ultralytics 8.4.x).
+# For a smaller CPU-only install, first run:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+ultralytics>=8.4.0
+torch
+torchvision
+pillow
+pi-heif  # HEIC/HEIF photos from iPhones; ultralytics' image loader expects it
