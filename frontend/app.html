@@ -76,6 +76,8 @@ html[lang="ar"] body{ font-family:'Cairo','Inter',system-ui,sans-serif; }
 .btn-primary{background:var(--red); color:#fff;}
 .btn-outline{background:#fff; color:var(--ink); border:1.5px solid var(--line); margin-top:10px;}
 .btn-block+.btn-block{margin-top:10px;}
+.btn.recording{background:var(--red-dark); color:#fff; border-color:var(--red-dark); animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
 input[type=file]{display:none;}
 .section-title{font-size:15px; font-weight:800; margin:24px 0 12px;}
 .condition-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
@@ -126,6 +128,8 @@ input[type=file]{display:none;}
   padding:11px 14px; margin-bottom:16px;
 }
 .search-box input{border:none; outline:none; font-size:14px; flex:1; font-family:inherit; background:transparent; color:var(--ink);}
+.mic-inline-btn{border:none; background:transparent; color:var(--gray); cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none; padding:2px;}
+.mic-inline-btn.recording{color:var(--red-dark); animation:pulse 1s ease-in-out infinite;}
 .article-row{
   display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--line); cursor:pointer;
 }
@@ -245,6 +249,10 @@ input[type=file]{display:none;}
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,3 22,20 2,20"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
       <p><span data-t="disclaimerText">This is general guidance, not a medical diagnosis. If the situation is serious,</span> <a onclick="goTab('emergency')" data-t="disclaimerLink">call emergency services now</a>.</p>
     </div>
+    <button class="btn btn-outline btn-block" id="listenBtn" onclick="playResultAudio()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      <span data-t="listenBtn" id="listenBtnLabel">Listen</span>
+    </button>
     <ul class="steps-list" id="resultSteps"></ul>
   </div>
 
@@ -254,6 +262,9 @@ input[type=file]{display:none;}
     <div class="search-box">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="searchInput" data-t-ph="searchPlaceholder" placeholder="Search e.g. fainting, broken arm" oninput="renderLibrary()">
+      <button class="mic-inline-btn" id="voiceBtnLibrary" onclick="toggleVoiceRecording()" title="Voice search" aria-label="Voice search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+      </button>
     </div>
     <div id="libraryList"></div>
   </div>
@@ -343,6 +354,13 @@ en:{ appName:"Isaafi", miniEmergency:"In an emergency, tap here to call now",
   errorTitle:"Couldn't reach the server",
   errorBody:"Check that the backend is running and the URL is set correctly (tap the gear icon), and that your phone can reach it.",
   retry:"Try Again", askApiUrl:"Backend URL (e.g. an ngrok link or http://192.168.x.x:8000). Leave empty to use demo mode.",
+  voiceSearch:"Describe by voice", voiceListening:"Listening… tap to stop",
+  voiceError:"Couldn't transcribe that. Check your connection and try again.",
+  voiceNeedsBackend:"Set a backend URL first (tap the gear icon) to use voice search.",
+  micError:"Microphone access was denied or isn't available on this device.",
+  listenBtn:"Listen", listenLoading:"Loading…", listenStop:"Stop",
+  ttsNeedsBackend:"Set a backend URL first (tap the gear icon) to hear this read aloud.",
+  ttsError:"Couldn't generate audio. Check your connection and try again.",
   articles:{
     fainting:{title:"Fainting",summary:"Sudden brief loss of consciousness.",steps:["Lay the person flat on their back and raise their legs 30cm to boost blood flow to the brain.","Loosen tight clothing around the neck and waist.","Check they are breathing; turn onto their side if they vomit.","If they don't wake within 1 minute, call emergency services.","Once awake, let them rest lying down for a few minutes before sitting up."]},
     fracture:{title:"Broken Arm / Bone",summary:"Suspected fracture or severe bone injury.",steps:["Keep the injured area still — do not try to realign the bone.","Support the limb above and below the injury with a rigid item and cloth (improvised splint).","Apply a cold pack wrapped in cloth to reduce swelling, not directly on skin.","Check fingers/toes for numbness or blue color — this needs urgent care.","Get to a hospital or call emergency services, especially if the bone is visibly deformed or breaks the skin."]},
@@ -370,6 +388,13 @@ fr:{ appName:"Isaafi", miniEmergency:"En cas d'urgence, appuyez ici pour appeler
   errorTitle:"Impossible de joindre le serveur",
   errorBody:"Vérifiez que le serveur backend fonctionne et que l'URL est correcte (icône d'engrenage), et que votre téléphone peut y accéder.",
   retry:"Réessayer", askApiUrl:"URL du serveur (ex: un lien ngrok ou http://192.168.x.x:8000). Laissez vide pour le mode démo.",
+  voiceSearch:"Décrire à voix haute", voiceListening:"Écoute en cours… appuyez pour arrêter",
+  voiceError:"Impossible de transcrire. Vérifiez votre connexion et réessayez.",
+  voiceNeedsBackend:"Définissez d'abord une URL de serveur (icône d'engrenage) pour utiliser la recherche vocale.",
+  micError:"Accès au microphone refusé ou indisponible sur cet appareil.",
+  listenBtn:"Écouter", listenLoading:"Chargement…", listenStop:"Arrêter",
+  ttsNeedsBackend:"Définissez d'abord une URL de serveur (icône d'engrenage) pour écouter ce texte.",
+  ttsError:"Impossible de générer l'audio. Vérifiez votre connexion et réessayez.",
   articles:{
     fainting:{title:"Évanouissement",summary:"Perte de conscience brève et soudaine.",steps:["Allongez la personne sur le dos et surélevez ses jambes de 30 cm.","Desserrez les vêtements serrés au niveau du cou et de la taille.","Vérifiez la respiration ; tournez-la sur le côté en cas de vomissement.","Si elle ne se réveille pas en 1 minute, appelez les secours.","Une fois réveillée, laissez-la se reposer allongée avant de s'asseoir."]},
     fracture:{title:"Bras cassé / Fracture",summary:"Suspicion de fracture ou blessure osseuse grave.",steps:["Ne bougez pas la zone blessée — n'essayez pas de réaligner l'os.","Immobilisez le membre avec une attelle improvisée au-dessus et en dessous.","Appliquez du froid enveloppé dans un tissu, jamais directement sur la peau.","Vérifiez la couleur des doigts/orteils — un engourdissement est urgent.","Rendez-vous à l'hôpital ou appelez les secours si l'os est visible ou déformé."]},
@@ -397,6 +422,13 @@ ar:{ appName:"اسعافي", miniEmergency:"في حالة الطوارئ، اض�
   errorTitle:"تعذّر الوصول إلى الخادم",
   errorBody:"تأكد من تشغيل الخادم وصحة الرابط (اضغط على أيقونة الإعدادات)، ومن أن هاتفك يمكنه الوصول إليه.",
   retry:"إعادة المحاولة", askApiUrl:"رابط الخادم (مثال: رابط ngrok أو http://192.168.x.x:8000). اتركه فارغًا لاستخدام وضع العرض التجريبي.",
+  voiceSearch:"الوصف بالصوت", voiceListening:"جارٍ الاستماع… اضغط للإيقاف",
+  voiceError:"تعذّر تحويل الصوت إلى نص. تحقق من الاتصال وحاول مجددًا.",
+  voiceNeedsBackend:"حدد رابط الخادم أولاً (أيقونة الإعدادات) لاستخدام البحث الصوتي.",
+  micError:"تم رفض الوصول إلى الميكروفون أو أنه غير متاح على هذا الجهاز.",
+  listenBtn:"استماع", listenLoading:"جارٍ التحميل…", listenStop:"إيقاف",
+  ttsNeedsBackend:"حدد رابط الخادم أولاً (أيقونة الإعدادات) للاستماع إلى هذا النص.",
+  ttsError:"تعذّر إنشاء الصوت. تحقق من الاتصال وحاول مجددًا.",
   articles:{
     fainting:{title:"الإغماء",summary:"فقدان مفاجئ وقصير للوعي.",steps:["مدد الشخص على ظهره وارفع ساقيه 30 سم لتحسين تدفق الدم للدماغ.","قم بفك الملابس الضيقة حول الرقبة والخصر.","تأكد من التنفس، وأدره على جانبه إذا تقيأ.","إذا لم يستيقظ خلال دقيقة، اتصل بالطوارئ.","بعد الاستيقاظ، دعه يرتاح مستلقيًا قبل الجلوس."]},
     fracture:{title:"كسر في الذراع / العظم",summary:"اشتباه في كسر أو إصابة خطيرة في العظم.",steps:["لا تحرك المنطقة المصابة، ولا تحاول إعادة ترتيب العظم.","ثبّت الطرف من الأعلى والأسفل بجبيرة مؤقتة وقماش.","ضع كمادة باردة ملفوفة بقماش، وليس مباشرة على الجلد.","تحقق من لون الأصابع، فالتنميل أو الزرقة يستدعي عناية عاجلة.","توجه للمستشفى أو اتصل بالطوارئ إذا كان العظم ظاهرًا أو مشوهًا."]},
@@ -494,9 +526,9 @@ function handleFile(file){
   const url = URL.createObjectURL(file);
   document.getElementById('previewImg').src = url;
   goTab('analyzing');
-  runClassification(file).then(({label, confidence, error})=>{
-    if(error){ showConnectionError(); return; }
-    showResult(label, confidence);
+  runClassification(file).then(result=>{
+    if(result.error){ showConnectionError(); return; }
+    showResult(result);
   });
 }
 document.getElementById('cameraInput').addEventListener('change', e=>handleFile(e.target.files[0]));
@@ -508,8 +540,8 @@ async function runClassification(file){
     return new Promise(resolve=>{
       setTimeout(()=>{
         const pool = ['burn','bleeding','choking'];
-        const label = pool[Math.floor(Math.random()*pool.length)];
-        resolve({label, confidence: Math.floor(70 + Math.random()*25)});
+        const condition = pool[Math.floor(Math.random()*pool.length)];
+        resolve({ condition, confidence: Math.floor(70 + Math.random()*25) });
       }, 1400);
     });
   }
@@ -522,7 +554,15 @@ async function runClassification(file){
     clearTimeout(timeoutId);
     if(!res.ok) throw new Error('bad status');
     const data = await res.json();
-    return { label: data.label, confidence: data.confidence };
+    // data matches the backend's FirstAidResponse: condition, confidence (0-1),
+    // steps and warnings straight from the LLM, uncertainty_message for "normal".
+    return {
+      condition: data.condition,
+      confidence: Math.round((data.confidence || 0) * 100),
+      steps: data.steps || [],
+      warnings: data.warnings || [],
+      uncertaintyMessage: data.uncertainty_message || null,
+    };
   } catch(err){
     clearTimeout(timeoutId);
     return { error: true };
@@ -537,22 +577,216 @@ function showConnectionError(){
      <li class="plain" style="border:none;">
        <button class="btn btn-outline btn-block" onclick="lastFile && handleFile(lastFile)">${T[lang].retry}</button>
      </li>`;
+  lastResultSpeech = '';
   goTab('result');
 }
 
-function showResult(id, confidence){
-  if(id === 'normal' || !T[lang].articles[id]){
+function showResult(result){
+  const { condition, confidence, steps, warnings, uncertaintyMessage } = result;
+
+  if(condition === 'normal' || !T[lang].articles[condition]){
+    const bodyText = uncertaintyMessage || T[lang].normalBody;
     document.getElementById('resultLabel').textContent = T[lang].normalTitle;
     document.getElementById('resultConfidence').textContent = confidence != null ? `${T[lang].conf}: ${confidence}%` : "";
-    document.getElementById('resultSteps').innerHTML = `<li class="plain" style="border:none;">${T[lang].normalBody}</li>`;
+    document.getElementById('resultSteps').innerHTML = `<li class="plain" style="border:none;">${bodyText}</li>`;
+    lastResultSpeech = bodyText;
     goTab('result');
     return;
   }
-  const a = T[lang].articles[id];
+
+  const a = T[lang].articles[condition];
+  // Prefer the LLM-generated steps/warnings from the backend; fall back to the
+  // local translated library entry in demo mode (no backend configured).
+  const stepsToShow = (steps && steps.length) ? steps : a.steps;
+  const warningsToShow = (warnings && warnings.length) ? warnings : [];
+
   document.getElementById('resultLabel').textContent = T[lang].detected + a.title;
-  document.getElementById('resultConfidence').textContent = `${T[lang].conf}: ${confidence}%`;
-  document.getElementById('resultSteps').innerHTML = a.steps.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('resultConfidence').textContent = confidence != null ? `${T[lang].conf}: ${confidence}%` : "";
+  document.getElementById('resultSteps').innerHTML =
+    stepsToShow.map(s=>`<li>${s}</li>`).join('') +
+    warningsToShow.map(w=>`<li class="plain" style="border:none; color:var(--red-dark); font-weight:600;">⚠ ${w}</li>`).join('');
+
+  lastResultSpeech = [a.title, ...stepsToShow, ...warningsToShow].join('. ');
   goTab('result');
+}
+
+/* ---- text-to-speech (reads the result aloud) ---- */
+let lastResultSpeech = '';
+let currentAudio = null;
+
+async function playResultAudio(){
+  if(!lastResultSpeech) return;
+
+  // Tap again while playing -> stop.
+  if(currentAudio){
+    currentAudio.pause();
+    currentAudio = null;
+    resetListenBtn();
+    return;
+  }
+
+  if(!API_BASE_URL){
+    alert(T[lang].ttsNeedsBackend);
+    return;
+  }
+
+  const label = document.getElementById('listenBtnLabel');
+  const btn = document.getElementById('listenBtn');
+  if(label) label.textContent = T[lang].listenLoading;
+
+  try{
+    const res = await fetch(`${API_BASE_URL}/speak`, {
+      method:'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ text: lastResultSpeech, language_code: VOICE_LANG_MAP[lang] || 'en-US' }),
+    });
+    if(!res.ok) throw new Error('bad status');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.onended = () => { currentAudio = null; resetListenBtn(); };
+    if(label) label.textContent = T[lang].listenStop;
+    if(btn) btn.classList.add('recording');
+    await currentAudio.play();
+  } catch(err){
+    resetListenBtn();
+    alert(T[lang].ttsError);
+  }
+}
+
+function resetListenBtn(){
+  const label = document.getElementById('listenBtnLabel');
+  const btn = document.getElementById('listenBtn');
+  if(label) label.textContent = T[lang].listenBtn;
+  if(btn) btn.classList.remove('recording');
+}
+
+/* ---- voice search (speech-to-text) ---- */
+const VOICE_LANG_MAP = { en:'en-US', fr:'fr-FR', ar:'ar-AR' };
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+function updateVoiceBtn(){
+  const label = document.getElementById('voiceBtnLabel');
+  if(label) label.textContent = isRecording ? T[lang].voiceListening : T[lang].voiceSearch;
+  const btn = document.getElementById('voiceBtn');
+  if(btn) btn.classList.toggle('recording', isRecording);
+  const libBtn = document.getElementById('voiceBtnLibrary');
+  if(libBtn) libBtn.classList.toggle('recording', isRecording);
+}
+
+async function toggleVoiceRecording(){
+  if(isRecording){
+    mediaRecorder.stop();
+    return;
+  }
+  if(!API_BASE_URL){
+    alert(T[lang].voiceNeedsBackend);
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      isRecording = false;
+      updateVoiceBtn();
+      const rawBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+      await sendVoiceRecording(rawBlob);
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    updateVoiceBtn();
+  } catch(err){
+    alert(T[lang].micError);
+  }
+}
+
+async function sendVoiceRecording(rawBlob){
+  try{
+    const wavBlob = await convertBlobToWav(rawBlob, 16000);
+    const form = new FormData();
+    form.append('audio', wavBlob, 'recording.wav');
+    form.append('language_code', VOICE_LANG_MAP[lang] || 'en-US');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(`${API_BASE_URL}/transcribe`, { method:'POST', body: form, signal: controller.signal });
+    clearTimeout(timeoutId);
+    if(!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    goTab('library');
+    const input = document.getElementById('searchInput');
+    if(input){ input.value = data.transcript; renderLibrary(); }
+  } catch(err){
+    alert(T[lang].voiceError);
+  }
+}
+
+/* Decodes any browser-recorded audio (webm/opus, ogg, etc.) and re-encodes it as
+   16-bit PCM mono WAV at the target sample rate — matches what the backend's
+   speech_to_text.py expects (Riva's LINEAR_PCM encoding). */
+function convertBlobToWav(blob, targetSampleRate){
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader();
+    fileReader.onload = async () => {
+      try{
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioCtx();
+        const audioBuffer = await audioCtx.decodeAudioData(fileReader.result);
+        resolve(encodeWav(audioBuffer, targetSampleRate));
+      } catch(e){ reject(e); }
+    };
+    fileReader.onerror = reject;
+    fileReader.readAsArrayBuffer(blob);
+  });
+}
+
+function encodeWav(audioBuffer, targetSampleRate){
+  const numChannels = audioBuffer.numberOfChannels;
+  const length = audioBuffer.length;
+
+  // Downmix to mono
+  const monoData = new Float32Array(length);
+  for(let ch = 0; ch < numChannels; ch++){
+    const chData = audioBuffer.getChannelData(ch);
+    for(let i = 0; i < length; i++) monoData[i] += chData[i] / numChannels;
+  }
+
+  // Simple linear resample to targetSampleRate
+  const srcRate = audioBuffer.sampleRate;
+  const ratio = targetSampleRate / srcRate;
+  const newLength = Math.round(length * ratio);
+  const resampled = new Float32Array(newLength);
+  for(let i = 0; i < newLength; i++){
+    const srcIndex = i / ratio;
+    const idx0 = Math.floor(srcIndex);
+    const idx1 = Math.min(idx0 + 1, length - 1);
+    const frac = srcIndex - idx0;
+    resampled[i] = monoData[idx0] * (1 - frac) + monoData[idx1] * frac;
+  }
+
+  // Encode 16-bit PCM WAV
+  const buffer = new ArrayBuffer(44 + resampled.length * 2);
+  const view = new DataView(buffer);
+  const writeString = (offset, str) => { for(let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+
+  writeString(0, 'RIFF'); view.setUint32(4, 36 + resampled.length * 2, true); writeString(8, 'WAVE');
+  writeString(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true); view.setUint32(24, targetSampleRate, true);
+  view.setUint32(28, targetSampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  writeString(36, 'data'); view.setUint32(40, resampled.length * 2, true);
+
+  let offset = 44;
+  for(let i = 0; i < resampled.length; i++){
+    const s = Math.max(-1, Math.min(1, resampled[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    offset += 2;
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
 }
 
 applyLang();

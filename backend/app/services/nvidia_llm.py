@@ -8,21 +8,18 @@ from openai import OpenAI
 from app import config
 from app.schemas.first_aid import FirstAidResponse
 
-_client = OpenAI(api_key=config.NVIDIA_API_KEY, base_url=config.NVIDIA_BASE_URL, timeout=20.0)
+_client = OpenAI(api_key=config.NVIDIA_API_KEY, base_url=config.NVIDIA_BASE_URL)
 
 _PROMPT_TEMPLATE = config.PROMPT_PATH.read_text(encoding="utf-8")
 
 
 def _parse_json_response(text: str) -> dict:
-    """Extract the JSON object even if the model adds reasoning, <think> tags,
-    or ```json fences around it."""
     text = text.strip()
-    if "</think>" in text:
-        text = text.split("</think>", 1)[1]
-    start, end = text.find("{"), text.rfind("}")
-    if start == -1 or end == -1:
-        raise ValueError("No JSON object found in Nemotron response")
-    return json.loads(text[start:end + 1])
+    if text.startswith("```"):
+        text = text.strip("`")
+        if text.startswith("json"):
+            text = text[4:]
+    return json.loads(text.strip())
 
 
 def generate_guidance(condition: str, confidence: float, retrieved_context: str) -> FirstAidResponse:
@@ -32,12 +29,9 @@ def generate_guidance(condition: str, confidence: float, retrieved_context: str)
     completion = _client.chat.completions.create(
         model=config.NEMOTRON_LLM_MODEL,
         temperature=0.2,
-        max_tokens=1024,
+        max_tokens=600,
         messages=[{"role": "user", "content": prompt}],
     )
     raw = completion.choices[0].message.content or ""
     parsed = _parse_json_response(raw)
-    parsed.pop("source", None)  # we set source ourselves
-    parsed.setdefault("condition", condition)
-    parsed.setdefault("confidence", confidence)
     return FirstAidResponse(**parsed, source="nemotron")
